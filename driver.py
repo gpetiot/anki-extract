@@ -49,4 +49,15 @@ if os.path.exists(BACKUP_FILE):
 else:
     print(f"No previous {BACKUP_FILE} to compare against.")
 
+# Step 4: Run check.py on the produced output file
+print(f"Running check.py on {JSON_FILE}...")
+result = subprocess.run(
+    ["python3", "check.py", JSON_FILE], capture_output=True, text=True
+)
+print(result.stdout)
+if result.returncode != 0:
+    print("check.py failed:")
+    print(result.stderr)
+    exit(1)
+
 print("Done.")
