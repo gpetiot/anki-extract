@@ -4,9 +4,9 @@ import subprocess
 import filecmp
 
 # Filenames
-ANKI_DB = 'collection.anki2'
-JSON_FILE = 'tagalog_dictionary.json'
-BACKUP_FILE = 'tagalog_dictionary.json.prev'
+ANKI_DB = "collection.anki2"
+JSON_FILE = "tagalog_dictionary.json"
+BACKUP_FILE = "tagalog_dictionary.json.prev"
 
 # Step 1: Backup previous JSON if it exists
 if os.path.exists(JSON_FILE):
@@ -20,7 +20,9 @@ else:
 echo = f"Running extract_anki.py on {ANKI_DB}..."
 print(echo)
 # Use subprocess to run the script with arguments
-result = subprocess.run(['python3', 'extract_anki.py', ANKI_DB, JSON_FILE], capture_output=True, text=True)
+result = subprocess.run(
+    ["python3", "extract_anki.py", ANKI_DB, JSON_FILE], capture_output=True, text=True
+)
 print(result.stdout)
 if result.returncode != 0:
     print("extract_anki.py failed:")
