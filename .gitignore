@@ -9,6 +9,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 env/
+.venv/
 build/
 develop-eggs/
 dist/
@@ -69,7 +70,7 @@ coverage.xml
 *.json.prev
 
 # Media
-media/
+media
 
 # Backup files
 *.bak
@@ -80,4 +81,4 @@ media/
 *.log
 
 # Ignore meta and backup
-meta/
+meta
