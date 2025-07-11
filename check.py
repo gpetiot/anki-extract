@@ -1,9 +1,13 @@
+"""
+Validates the extracted JSON file for missing fields, empty values, and duplicate entries.
+"""
+
 import json
-import re
 import sys
 
 
 def usage():
+    """Prints usage information and exits."""
     print("Usage: python check.py <json_file>")
     sys.exit(1)
 
@@ -16,10 +20,11 @@ JSON_FILE = sys.argv[1]
 
 # Load JSON
 def load_json(path):
+    """Loads a JSON file from the given path."""
     try:
         with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
-    except Exception as e:
+    except OSError as e:
         print(f"Error loading {path}: {e}")
         sys.exit(1)
 
@@ -53,6 +58,7 @@ def check_duplicates(entries):
 
 
 def main():
+    """Main entry point for JSON validation script."""
     data = load_json(JSON_FILE)
     entries = data.get("entries", [])
     print(f"Loaded {len(entries)} entries from {JSON_FILE}")

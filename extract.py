@@ -1,9 +1,12 @@
+"""
+Extracts entries from an Anki database and writes them to a structured JSON file.
+"""
+
 import sqlite3
 import json
 import re
 import sys
 from bs4 import BeautifulSoup
-from html import unescape
 
 
 def extract_links(soup):
@@ -23,7 +26,7 @@ def extract_links(soup):
 
 
 def extract_definitions(def_string):
-    """Extract definitions as a list of dicts from a string, splitting by [part_of_speech] markers only."""
+    """Extract definitions as a list of dicts from a string."""
     definitions = []
     # Find all [part_of_speech] markers and their positions
     matches = list(re.finditer(r"\[([^\]]+)\]", def_string))
@@ -43,6 +46,7 @@ def extract_definitions(def_string):
     return definitions
 
 
+# pylint: disable=locally-disabled, too-many-locals
 def parse_html(html_content):
     """Parse the HTML content and extract structured data"""
     html_content = html_content.replace("<br>", "\n").replace("<br/>", "\n")
@@ -105,6 +109,7 @@ def parse_html(html_content):
 
 
 def main():
+    """Main entry point for extracting Anki entries to JSON."""
     if len(sys.argv) != 3:
         print("Usage: python extract.py <anki_db_file> <output_json_file>")
         sys.exit(1)

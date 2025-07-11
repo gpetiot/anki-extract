@@ -1,3 +1,12 @@
+"""
+Driver script for anki-extract.
+
+- Backs up previous JSON output
+- Runs extract.py to generate a new extract from an Anki database
+- Compares new and previous JSON files
+- Validates the output using check.py
+"""
+
 import os
 import shutil
 import subprocess
@@ -6,6 +15,7 @@ import sys
 
 
 def usage():
+    """Prints usage information and exits."""
     print("Usage: python driver.py <anki_db_file> <output_json_file>")
     sys.exit(1)
 
@@ -26,17 +36,20 @@ else:
 
 
 # Step 2: Run extract.py on the specified Anki collection
-echo = f"Running extract.py on {ANKI_DB}..."
-print(echo)
+ECHO = f"Running extract.py on {ANKI_DB}..."
+print(ECHO)
 # Use subprocess to run the script with arguments
 result = subprocess.run(
-    ["python3", "extract.py", ANKI_DB, JSON_FILE], capture_output=True, text=True
+    ["python3", "extract.py", ANKI_DB, JSON_FILE],
+    capture_output=True,
+    text=True,
+    check=True,
 )
 print(result.stdout)
 if result.returncode != 0:
     print("extract.py failed:")
     print(result.stderr)
-    exit(1)
+    sys.exit(1)
 
 # Step 3: Compare new and previous JSON if backup exists
 if os.path.exists(BACKUP_FILE):
@@ -47,8 +60,10 @@ if os.path.exists(BACKUP_FILE):
         print(f"Differences detected between {JSON_FILE} and {BACKUP_FILE}.")
         print("Showing unified diff (press q to quit):")
         try:
-            subprocess.run(f"diff -u {BACKUP_FILE} {JSON_FILE} | less", shell=True)
-        except Exception as e:
+            subprocess.run(
+                f"diff -u {BACKUP_FILE} {JSON_FILE} | less", shell=True, check=True
+            )
+        except TimeoutError as e:
             print(f"Error running diff: {e}")
 else:
     print(f"No previous {BACKUP_FILE} to compare against.")
@@ -56,12 +71,12 @@ else:
 # Step 4: Run check.py on the produced output file
 print(f"Running check.py on {JSON_FILE}...")
 result = subprocess.run(
-    ["python3", "check.py", JSON_FILE], capture_output=True, text=True
+    ["python3", "check.py", JSON_FILE], capture_output=True, text=True, check=True
 )
 print(result.stdout)
 if result.returncode != 0:
     print("check.py failed:")
     print(result.stderr)
-    exit(1)
+    sys.exit(1)
 
 print("Done.")
