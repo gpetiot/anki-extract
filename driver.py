@@ -45,7 +45,11 @@ if os.path.exists(BACKUP_FILE):
         print("No differences detected in JSON output.")
     else:
         print(f"Differences detected between {JSON_FILE} and {BACKUP_FILE}.")
-        print("You may want to review the diff manually.")
+        print("Showing unified diff (press q to quit):")
+        try:
+            subprocess.run(f"diff -u {BACKUP_FILE} {JSON_FILE} | less", shell=True)
+        except Exception as e:
+            print(f"Error running diff: {e}")
 else:
     print(f"No previous {BACKUP_FILE} to compare against.")
 
