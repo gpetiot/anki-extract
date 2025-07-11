@@ -22,125 +22,84 @@ def extract_links(soup):
     return links
 
 
+def extract_definitions(def_string):
+    """Extract definitions as a list of dicts from a string, splitting by [part_of_speech] markers only."""
+    definitions = []
+    # Find all [part_of_speech] markers and their positions
+    matches = list(re.finditer(r"\[([^\]]+)\]", def_string))
+    if not matches:
+        return []
+    for idx, match in enumerate(matches):
+        part_of_speech = match.group(1)
+        start = match.end()
+        end = matches[idx + 1].start() if idx + 1 < len(matches) else len(def_string)
+        definition = def_string[start:end].strip()
+        # Remove leading/trailing semicolons and whitespace
+        definition = definition.strip(";").strip()
+        if definition:
+            definitions.append(
+                {"part_of_speech": part_of_speech, "definition": definition}
+            )
+    return definitions
+
+
 def parse_html(html_content):
     """Parse the HTML content and extract structured data"""
-    # Convert <br> to newlines for easier processing
     html_content = html_content.replace("<br>", "\n").replace("<br/>", "\n")
-
-    # Create soup
     soup = BeautifulSoup(html_content, "html.parser")
-
-    # Get all links
     links = extract_links(soup)
-
-    # Get audio file
     sound_match = re.search(r"\[sound:(.*?)\]", html_content)
     audio = sound_match.group(1) if sound_match else ""
-
-    # Split content by newlines and clean each line
     lines = [line.strip() for line in soup.get_text().split("\n") if line.strip()]
-
-    # Process content
     content = {
         "word": "",
         "variants": [],
-        "part_of_speech": "",
-        "definition": "",
+        "definitions": [],
         "pronunciation": "",
         "conjugations": "",
         "examples": [],
     }
-
-    # First line contains word, POS, and primary definition
     if lines:
+        # Extract main word and definitions from lines[0]
         first_line = lines[0]
-        if "[" not in first_line:
-            print(
-                f"DEBUG: Entry without expected [part_of_speech] format: '{first_line}'"
-            )
-            print("Full content:", html_content)
-        else:
-            # Split word part and rest
-            word_part, rest = first_line.split("[", 1)
-
-            # Process word and variants
+        # Try to split on '[' (preferred) or '\u001f' (fallback)
+        if "[" in first_line:
+            word_part, def_part = first_line.split("[", 1)
             words = [w.strip() for w in word_part.split(",")]
-
-            # Get initial definition if available
-            definition = ""
-            if "]" in rest:
-                pos, definition = rest.split("]", 1)
-                definition = definition.strip()
-            else:
-                print(f"DEBUG: Entry without closing ]: '{rest}'")
-                print("Full content:", html_content)
-
-            # Clean up any numbered markers from the word and variants
             main_word = words[0]
-            if "\u001f" in main_word:  # Handle special marker
-                parts = main_word.split("\u001f")
-                main_word = parts[0]
-                if len(parts) > 1 and parts[1] not in definition:
-                    definition = parts[1] + " " + definition
+            if "\u001f" in main_word:
+                main_word = main_word.split("\u001f")[0]
             content["word"] = main_word.strip()
-
-            # Clean variants
             variants = []
             for variant in words[1:]:
                 if "\u001f" in variant:
-                    variant_parts = variant.split("\u001f")
-                    variant = variant_parts[0]
-                    if len(variant_parts) > 1 and variant_parts[1] not in definition:
-                        definition = variant_parts[1] + " " + definition
+                    variant = variant.split("\u001f")[0]
                 variants.append(variant.strip())
             content["variants"] = variants
+            # Definitions are everything after the first '['
+            def_string = "[" + def_part
+            content["definitions"] = extract_definitions(def_string)
+        elif "\u001f" in first_line:
+            # Fallback for entries with '\u001f' separator
+            word_part, def_part = first_line.split("\u001f", 1)
+            content["word"] = word_part.strip()
+            def_string = def_part.strip()
+            content["definitions"] = extract_definitions(def_string)
+        else:
+            # If no separator, treat whole line as word (edge case)
+            content["word"] = first_line.strip()
+            content["definitions"] = []
 
-            # Set the final values
-            if "]" in rest:
-                content["part_of_speech"] = pos.strip()
-                content["definition"] = definition.strip()
-
-            # Process POS and definition
-            if "]" in rest:
-                pos, definition = rest.split("]", 1)
-                content["part_of_speech"] = pos.strip()
-                # If the word had a numbered marker, add it to the definition
-                if "\u001f" in words[0]:
-                    numbered_part = words[0].split("\u001f")[1]
-                    if numbered_part and numbered_part not in definition:
-                        definition = numbered_part + " " + definition.strip()
-                content["definition"] = definition.strip()
-
-    # Process remaining lines
+    # Process remaining lines for pronunciation and conjugations
     pronunciation_pattern = re.compile(r"[áàâãäåāăąèéêëēĕėęěìíîïðīĭ]")
     for line in lines[1:]:
         line = line.strip()
         if not line:
             continue
-
-        # Skip known meta lines
-        if any(
-            x in line
-            for x in [
-                "Audio",
-                "Dictionary Entry",
-                "Example Sentences",
-                "Video Example Search",
-                "Flash cards by",
-            ]
-        ):
-            continue
-
         if "Conjugations:" in line:
             content["conjugations"] = line.replace("Conjugations:", "").strip()
         elif pronunciation_pattern.search(line):
             content["pronunciation"] = line
-        else:
-            # If not special line, treat as additional definition
-            if content["definition"]:
-                content["definition"] += "; " + line
-            else:
-                content["definition"] = line
 
     return {"content": content, "audio": audio, "links": links}
 
@@ -165,8 +124,7 @@ def main():
             entry = {
                 "word": parsed["content"]["word"],
                 "variants": "; ".join(parsed["content"]["variants"]),
-                "part_of_speech": parsed["content"]["part_of_speech"],
-                "definition": parsed["content"]["definition"],
+                "definitions": parsed["content"]["definitions"],
                 "pronunciation": parsed["content"]["pronunciation"],
                 "conjugations": parsed["content"]["conjugations"],
                 "audio": parsed["audio"],
