@@ -147,7 +147,7 @@ def parse_html(html_content):
 
 def main():
     if len(sys.argv) != 3:
-        print("Usage: python extract_anki.py <anki_db_file> <output_json_file>")
+        print("Usage: python extract.py <anki_db_file> <output_json_file>")
         sys.exit(1)
 
     anki_db = sys.argv[1]

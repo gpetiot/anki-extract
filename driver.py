@@ -25,16 +25,16 @@ else:
     print(f"No previous {JSON_FILE} found, skipping backup.")
 
 
-# Step 2: Run extract_anki.py on the specified Anki collection
-echo = f"Running extract_anki.py on {ANKI_DB}..."
+# Step 2: Run extract.py on the specified Anki collection
+echo = f"Running extract.py on {ANKI_DB}..."
 print(echo)
 # Use subprocess to run the script with arguments
 result = subprocess.run(
-    ["python3", "extract_anki.py", ANKI_DB, JSON_FILE], capture_output=True, text=True
+    ["python3", "extract.py", ANKI_DB, JSON_FILE], capture_output=True, text=True
 )
 print(result.stdout)
 if result.returncode != 0:
-    print("extract_anki.py failed:")
+    print("extract.py failed:")
     print(result.stderr)
     exit(1)
 
