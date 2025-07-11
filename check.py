@@ -24,26 +24,9 @@ def load_json(path):
         sys.exit(1)
 
 
-def check_definitions(entries):
-    """Check for definition field issues."""
-    issues = []
-    for i, entry in enumerate(entries):
-        definition = entry.get("definition", "")
-        # Check for double semicolons (;;) which may indicate bad joining
-        if ";;" in definition:
-            issues.append((i, entry["word"], "Double semicolons in definition"))
-        # Check for numbered definitions that are not split
-        if re.search(r"1\.\)[^;]+2\.\)", definition):
-            issues.append((i, entry["word"], "Multiple numbered definitions not split"))
-        # Check for empty definition
-        if not definition.strip():
-            issues.append((i, entry["word"], "Empty definition"))
-    return issues
-
-
 def check_fields(entries):
     """Check for missing or empty required fields."""
-    required = ["word", "part_of_speech", "definition"]
+    required = ["word", "definitions"]
     issues = []
     for i, entry in enumerate(entries):
         for field in required:
@@ -60,13 +43,10 @@ def check_duplicates(entries):
     dups = []
     for i, entry in enumerate(entries):
         word = entry.get("word", "").strip().lower()
-        pos = entry.get("part_of_speech", "").strip().lower()
         pron = entry.get("pronunciation", "").strip().lower()
-        key = (word, pos, pron)
+        key = (word, pron)
         if key in seen:
-            dups.append(
-                (i, word, f"Duplicate word/pos/pron: pos='{pos}', pron='{pron}'")
-            )
+            dups.append((i, word, f"Duplicate word/pron: pron='{pron}'"))
         else:
             seen.add(key)
     return dups
@@ -78,7 +58,6 @@ def main():
     print(f"Loaded {len(entries)} entries from {JSON_FILE}")
 
     issues = []
-    issues += check_definitions(entries)
     issues += check_fields(entries)
     issues += check_duplicates(entries)
 
