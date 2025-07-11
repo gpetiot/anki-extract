@@ -2,7 +2,16 @@ import json
 import re
 import sys
 
-JSON_FILE = "tagalog_dictionary.json"
+
+def usage():
+    print("Usage: python check.py <json_file>")
+    sys.exit(1)
+
+
+if len(sys.argv) != 2:
+    usage()
+
+JSON_FILE = sys.argv[1]
 
 
 # Load JSON
