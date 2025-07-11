@@ -2,11 +2,20 @@ import os
 import shutil
 import subprocess
 import filecmp
+import sys
 
-# Filenames
-ANKI_DB = "collection.anki2"
-JSON_FILE = "tagalog_dictionary.json"
-BACKUP_FILE = "tagalog_dictionary.json.prev"
+
+def usage():
+    print("Usage: python driver.py <anki_db_file> <output_json_file>")
+    sys.exit(1)
+
+
+if len(sys.argv) != 3:
+    usage()
+
+ANKI_DB = sys.argv[1]
+JSON_FILE = sys.argv[2]
+BACKUP_FILE = JSON_FILE + ".prev"
 
 # Step 1: Backup previous JSON if it exists
 if os.path.exists(JSON_FILE):
